@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canvas 24x24 com Conversão Binária</title>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: Arial, sans-serif;
+    }
+    .container {
+        display: flex;
+    }
+    canvas {
+        border: 1px solid #000;
+        background-color: #fff;
+        cursor: crosshair;
+    }
+    .controls, .progress-table {
+        margin: 10px;
+    }
+    label, input, button, select, textarea {
+        margin: 5px;
+        font-family: "Arial";
+        font-size: 16px;
+    }
+    textarea {
+        width: 600px;
+        height: 150px;
+        font-size: 14px;
+    }
+    .progress-table {
+        display: grid;
+        grid-template-columns: repeat(10, 30px);
+        grid-gap: 5px;
+        margin-left: 20px;
+    }
+    .progress-table div {
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #ddd;
+        background-color: #f0f0f0;
+        font-weight: bold;
+    }
+    .progress-table div.completed {
+        background-color: #88ccff;
+    }
+</style>
+</head>
+<body>
+
+<div class="controls">
+    <h4>Desenhe um caractere no canvas 24x24</h4>
+    <label for="penSize">Tamanho da Pena:</label>
+    <select id="penSize">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4" selected>4</option>
+        <option value="5">5</option>
+    </select>
+    <canvas id="canvas" width="240" height="240"></canvas>
+    <br>
+    <label for="character">Caractere:</label>
+    <input type="text" id="character" maxlength="1" placeholder="Ex: A">
+    <button onclick="convertToBits()">Converter para Bits</button>
+    <button onclick="clearCanvas()">Limpar Canvas</button>
+    <button onclick="clearOutput()">Limpar Texto</button>
+</div>
+
+<div class="container">
+    <textarea id="output" placeholder="Matriz de bits aparecerá aqui..."></textarea>
+    <div class="progress-table" id="progressTable"></div>
+</div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const pixelSize = 10; // Cada "pixel" será ampliado 10x
+    const gridSize = 24; // Tamanho da grade: 24x24
+    let drawing = false;
+    let penSize = 4;
+    const progressTable = document.getElementById('progressTable');
+    const characterInput = document.getElementById('character');
+    const characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz/=";
+    let completedChars = {};
+
+    // Cria a tabela de progresso com todos os caracteres alvo
+    characters.split('').forEach(char => {
+        const cell = document.createElement('div');
+        cell.textContent = char;
+        cell.id = `char-${char}`;
+        progressTable.appendChild(cell);
+    });
+
+    // Configuração inicial do canvas
+    ctx.fillStyle = "black";
+    ctx.strokeStyle = "#ccc";
+    ctx.lineWidth = 1;
+    
+    document.getElementById('penSize').addEventListener('change', (event) => {
+        penSize = parseInt(event.target.value);
+    });
+
+    canvas.addEventListener('mousedown', () => drawing = true);
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mousemove', draw);
+
+    window.onbeforeunload = function () {
+        return "Tem certeza de que deseja sair? Suas alterações podem não ser salvas.";
+    };
+
+    function draw(event) {
+        if (!drawing) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        const gridX = Math.floor(x / pixelSize) * pixelSize;
+        const gridY = Math.floor(y / pixelSize) * pixelSize;
+
+        ctx.fillRect(gridX, gridY, pixelSize * penSize / 3, pixelSize * penSize / 3);
+    }
+
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGrid();
+    }
+
+    function clearOutput() {
+        if (confirm("Todo conteúdo do textarea será perdido. Continuar?")) {
+            document.getElementById('output').value = '';
+        }
+    }
+
+    function drawGrid() {
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                ctx.strokeRect(i * pixelSize, j * pixelSize, pixelSize, pixelSize);
+            }
+        }
+    }
+
+    function convertToBits() {
+        const character = characterInput.value;
+        if (!character || !characters.includes(character)) {
+            alert("Digite um caractere válido (0-9, A-Z, a-z, /, =)");
+            characterInput.focus();
+            return;
+        }
+
+        const bitMatrix = [];
+        for (let y = 0; y < gridSize; y++) {
+            for (let x = 0; x < gridSize; x++) {
+                const pixelData = ctx.getImageData(x * pixelSize, y * pixelSize, pixelSize, pixelSize).data;
+                let isFilled = false;
+                for (let i = 0; i < pixelData.length; i += 4) {
+                    if (pixelData[i] === 0 && pixelData[i + 1] === 0 && pixelData[i + 2] === 0 && pixelData[i + 3] === 255) {
+                        isFilled = true;
+                        break;
+                    }
+                }
+                bitMatrix.push(isFilled ? 1 : 0);
+            }
+        }
+
+        const bitString = bitMatrix.join('') + ' ' + character;
+        const output = document.getElementById('output');
+        output.value += bitString + '\n';
+
+        // Marca o caractere como completado na tabela de progresso
+        completedChars[character] = true;
+        document.getElementById(`char-${character}`).classList.add('completed');
+
+        clearCanvas();
+        characterInput.value = '';
+    }
+
+    drawGrid();
+</script>
+
+</body>
+</html>
