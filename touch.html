@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canvas 28x28 com Conversão Binária</title>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: Arial, sans-serif;
+    }
+    canvas {
+        border: 1px solid #000;
+        background-color: #fff;
+        cursor: crosshair;
+    }
+    .controls {
+        margin-top: 10px;
+    }
+    label, input, button, select, textarea {
+        margin: 5px;
+        font-family: "Arial";
+        font-size: 16px;
+    }
+    textarea {
+        width: 600px;
+        height: 150px;
+        font-size: 14px;
+    }
+</style>
+</head>
+<body>
+
+<div class="controls">
+    <label for="penSize">Tamanho da Pena:</label>
+    <select id="penSize">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4" selected>4</option>
+        <option value="5">5</option>
+    </select>
+    <h4>Desenhe um caractere no canvas 28x28</h4>
+    <canvas id="canvas" width="280" height="280"></canvas>
+    <label for="character">Caractere:</label>
+    <input type="text" id="character" maxlength="1" placeholder="Ex: A">
+    <button onclick="convertToBits()">Converter para Bits</button>
+    <button onclick="clearCanvas()">Limpar Canvas</button>
+    <button onclick="clearOutput()">Limpar Texto</button>
+</div>
+
+<textarea id="output" placeholder="Matriz de bits aparecerá aqui..."></textarea>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const pixelSize = 10;
+    const gridSize = 28;
+    let drawing = false;
+    let penSize = 4;
+
+    document.getElementById('penSize').addEventListener('change', (event) => {
+        penSize = parseInt(event.target.value);
+    });
+
+    function drawGrid() {
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                ctx.strokeRect(i * pixelSize, j * pixelSize, pixelSize, pixelSize);
+            }
+        }
+    }
+
+    function startDrawing(x, y) {
+        drawing = true;
+        drawAtPosition(x, y);
+    }
+
+    function stopDrawing() {
+        drawing = false;
+    }
+
+    function drawAtPosition(x, y) {
+        if (!drawing) return;
+        const rect = canvas.getBoundingClientRect();
+        const gridX = Math.floor((x - rect.left) / pixelSize) * pixelSize;
+        const gridY = Math.floor((y - rect.top) / pixelSize) * pixelSize;
+        ctx.fillRect(gridX, gridY, pixelSize * penSize / 3, pixelSize * penSize / 3);
+    }
+
+    canvas.addEventListener('mousedown', (e) => startDrawing(e.clientX, e.clientY));
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mousemove', (e) => drawAtPosition(e.clientX, e.clientY));
+
+    canvas.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        startDrawing(touch.clientX, touch.clientY);
+    });
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        drawAtPosition(touch.clientX, touch.clientY);
+    });
+    canvas.addEventListener('touchend', stopDrawing);
+
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGrid();
+    }
+
+    function clearOutput() {
+        document.getElementById('output').value = '';
+    }
+
+    function convertToBits() {
+        const character = document.getElementById('character').value;
+        if (!character) return alert("Digite um caractere.");
+
+        const bitMatrix = [];
+        for (let y = 0; y < gridSize; y++) {
+            for (let x = 0; x < gridSize; x++) {
+                const pixelData = ctx.getImageData(x * pixelSize, y * pixelSize, pixelSize, pixelSize).data;
+                let isFilled = false;
+                for (let i = 0; i < pixelData.length; i += 4) {
+                    const [r, g, b, a] = pixelData.slice(i, i + 4);
+                    if (r === 0 && g === 0 && b === 0 && a === 255) {
+                        isFilled = true;
+                        break;
+                    }
+                }
+                bitMatrix.push(isFilled ? 1 : 0);
+            }
+        }
+        const bitString = bitMatrix.join('') + ' ' + character;
+        document.getElementById('output').value += bitString + '\n';
+        document.getElementById('character').value = '';
+        clearCanvas();
+    }
+
+    drawGrid();
+</script>
+
+</body>
+</html>
