@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Validação de Capturas de Caracteres</title>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: Arial, sans-serif;
+    }
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+    }
+    canvas {
+        border: 1px solid #000;
+        background-color: #fff;
+        cursor: crosshair;
+    }
+    textarea {
+        width: 400px;
+        height: 100px;
+        font-size: 14px;
+        margin: 10px 0;
+    }
+    .controls {
+        margin: 10px;
+    }
+    label, input, button {
+        margin: 5px;
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+    }
+</style>
+</head>
+<body>
+
+<h2>Validação de Capturas de Caracteres</h2>
+
+<div class="container">
+    <input type="file" id="fileInput" accept=".txt" />
+    <div id="characterDisplay">Caractere: <span id="charLabel"></span></div>
+    <canvas id="canvas" width="240" height="240"></canvas>
+    <div class="controls">
+        <button onclick="acceptEntry()">Aceitar</button>
+        <button onclick="rejectEntry()">Rejeitar</button>
+        <button onclick="nextEntry()">Próximo</button>
+    </div>
+    <h3>Dados Aceitos</h3>
+    <textarea id="acceptedData" placeholder="Linhas aceitas aparecerão aqui..."></textarea>
+    <h3>Dados Rejeitados</h3>
+    <textarea id="rejectedData" placeholder="Linhas rejeitadas aparecerão aqui..."></textarea>
+</div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const pixelSize = 10;
+    const gridSize = 24;
+    let fileData = [];
+    let currentLine = 0;
+
+    document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                fileData = e.target.result.trim().split('\n');
+                currentLine = 0;
+                if (fileData.length > 0) {
+                    displayEntry();
+                }
+            };
+            reader.readAsText(file);
+        }
+    }
+
+    function displayEntry() {
+        if (currentLine < fileData.length) {
+            const [bitString, character] = fileData[currentLine].split(' ');
+            drawCanvas(bitString);
+            document.getElementById('charLabel').textContent = character;
+        }
+    }
+
+    function drawCanvas(bitString) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                const bit = bitString[i * gridSize + j];
+                ctx.fillStyle = bit === '1' ? 'black' : 'white';
+                ctx.fillRect(j * pixelSize, i * pixelSize, pixelSize, pixelSize);
+            }
+        }
+    }
+
+    function acceptEntry() {
+        const entry = fileData[currentLine];
+        document.getElementById('acceptedData').value += entry + '\n';
+        nextEntry();
+    }
+
+    function rejectEntry() {
+        const entry = fileData[currentLine];
+        document.getElementById('rejectedData').value += entry + '\n';
+        nextEntry();
+    }
+
+    function nextEntry() {
+        currentLine++;
+        if (currentLine < fileData.length) {
+            displayEntry();
+        } else {
+            alert("Fim dos dados!");
+        }
+    }
+</script>
+
+</body>
+</html>
