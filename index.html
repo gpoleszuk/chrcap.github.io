@@ -1,0 +1,230 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canvas 24x24 com Conversão Binária</title>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: Arial, sans-serif;
+    }
+    canvas {
+        border: 1px solid #000;
+        background-color: #fff;
+        cursor: crosshair;
+    }
+    .controls {
+        margin-top: 10px;
+    }
+    label, input, button, select, textarea {
+        margin: 5px;
+        font-family: "Arial";
+        font-size: 16px;
+    }
+    textarea {
+        width: 600px;
+        height: 150px;
+        font-size: 14px;
+    }
+</style>
+</head>
+<body>
+
+    <div class="controls">
+    <label for="penSize">Tamanho da Pena:</label>
+    <select id="penSize">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4" selected>4</option>
+        <option value="5">5</option>
+    </select>
+    <h4>Desenhe um caractere no canvas 24x24</h4>
+    <canvas id="canvas" width="240" height="240"></canvas>
+    <h4>Escreva o caractere no input box. Pressione Converter para Bits<h4>
+    <label for="character">Caractere:</label>
+    <input type="text" id="character" maxlength="1" placeholder="Ex: A">
+    <button onclick="convertToBits()">Converter para Bits</button>
+    <button onclick="clearCanvas()">Limpar Canvas</button>
+    <button onclick="clearOutput()">Limpar Texto</button>
+</div>
+
+<textarea id="output" placeholder="Matriz de bits aparecerá aqui..."></textarea>
+<button type="button" value="save" id="save" onclick="download()">Save</button>
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const pixelSize = 10; // Cada "pixel" será ampliado 10x
+    const gridSize = 24; // Tamanho da grade: 24x24
+
+    // Configurações iniciais
+    ctx.fillStyle = "black";
+    ctx.strokeStyle = "#ccc";
+    ctx.strokeStyle = "#ee0";
+    ctx.lineWidth = 1;
+
+    let drawing = false;
+    let penSize = 4;
+
+    // Atualiza o tamanho da pena baseado na seleção
+    document.getElementById('penSize').addEventListener('change', (event) => {
+        penSize = parseInt(event.target.value);
+    });
+
+    // Função para desenhar a grade de 28x28
+    function drawGrid() {
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                ctx.strokeRect(i * pixelSize, j * pixelSize, pixelSize, pixelSize);
+            }
+        }
+    }
+
+    // Ativa o desenho
+    canvas.addEventListener('mousedown', () => drawing = true);
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mousemove', draw);
+    //var button = document.getElementById('save');
+    //button.addEventListener('click', saveTextAsFile);
+
+    window.onunload = function() {
+    // Make your AJAX call
+        console.log();
+    }
+
+    function draw(event) {
+        if (!drawing) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        const gridX = Math.floor(x / pixelSize) * pixelSize;
+        const gridY = Math.floor(y / pixelSize) * pixelSize;
+
+        ctx.fillRect(gridX, gridY, pixelSize * penSize / 3, pixelSize * penSize / 3);
+    }
+
+    // Limpa o canvas
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGrid();
+    }
+
+    // Limpa a textarea
+    // Credits: https://www.geeksforgeeks.org/javascript-window-confirm-method
+    function clearOutput() {
+        let result = confirm("Todo conteúdo do textarea será perdido. Continuar?");
+        if (result) {
+            console.log("User clicked OK: " + result);
+            document.getElementById('output').value = '';
+        } else {
+            console.log("User clicked OK: " + result);
+        }
+        //document.getElementById('output').value = '';
+    }
+
+    // Limpa a input text
+    function clearInputText() {
+        document.getElementById('character').value = '';
+    }
+
+    // Credits: https://stackoverflow.com/a/30740104
+    /*
+    function saveTextAsFile() {
+      var textToWrite = document.getElementById('output').innerHTML;
+      var textFileAsBlob = new Blob([ textToWrite ], { type: 'text/plain' });
+      var fileNameToSaveAs = "file.txt"; //filename.extension
+
+      var downloadLink = document.createElement("a");
+      downloadLink.download = fileNameToSaveAs;
+      downloadLink.innerHTML = "Download File";
+      if (window.webkitURL != null) {
+        // Chrome allows the link to be clicked without actually adding it to the DOM.
+        downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+      } else {
+        // Firefox requires the link to be added to the DOM before it can be clicked.
+        downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+        downloadLink.onclick = destroyClickedElement;
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+      }
+
+      downloadLink.click();
+    }
+
+    function destroyClickedElement(event) {
+      // remove the link from the DOM
+      document.body.removeChild(event.target);
+    }
+    */
+
+    // Credits: https://stackoverflow.com/a/48550997
+    function download(){
+        var text = document.getElementById("output").value;
+        text = text.replace(/\n/g, "\r\n"); // To retain the Line breaks.
+        var blob = new Blob([text], { type: "text/plain"});
+        var anchor = document.createElement("a");
+        anchor.download = "my-filename.txt";
+        anchor.href = window.URL.createObjectURL(blob);
+        anchor.target ="_blank";
+        anchor.style.display = "none"; // just to be safe!
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+    }
+
+    // Converte o desenho para uma matriz de bits e adiciona o caractere
+    function convertToBits() {
+        // Obter caractere do input e adicionar ao final
+        // const character = document.getElementById('character').value || '?';
+        const character = document.getElementById('character').value;
+        if (character == '') {
+            //alert("Digite um valor no input text que corresponde ao caracter desenhado");
+            document.getElementById("character").focus();
+            document.getElementById("character").style.borderColor = 'red';
+            document.getElementById("character").style.border = '5px solid red';
+        } else {
+            const bitMatrix = [];
+
+            document.getElementById("character").style.border = '2px solid blue';
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    // Pega a cor do pixel central no quadrado 10x10
+                    const pixelData = ctx.getImageData(x * pixelSize, y * pixelSize, pixelSize, pixelSize).data;
+                    let isFilled = false;
+
+                    // Verifica se algum pixel na área do quadrado 20x20 é preto
+                    for (let i = 0; i < pixelData.length; i += 4) {
+                        const [r, g, b, a] = pixelData.slice(i, i + 4);
+                        if (r === 0 && g === 0 && b === 0 && a === 255) {
+                            isFilled = true;
+                            break;
+                        }
+                    }
+
+                    bitMatrix.push(isFilled ? 1 : 0);
+                }
+            }
+
+            const bitString = bitMatrix.join('') + ' ' + character;
+
+            // Adiciona a sequência de bits na textarea com uma nova linha
+            const output = document.getElementById('output');
+            output.value += bitString + '\n';
+
+            clearInputText();
+            clearCanvas();
+        }
+    }
+
+    // Desenha a grade inicial
+    drawGrid();
+</script>
+
+</body>
+</html>
