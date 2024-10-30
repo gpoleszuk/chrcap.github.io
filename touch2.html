@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canvas 24x24 com Conversão Binária</title>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: Arial, sans-serif;
+    }
+    canvas {
+        border: 1px solid #000;
+        background-color: #fff;
+        cursor: crosshair;
+        margin-bottom: 10px;
+    }
+    .controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .button-container {
+        margin-top: 10px;
+    }
+    .character-grid {
+        display: grid;
+        grid-template-columns: repeat(13, 1fr);
+        gap: 5px;
+        margin-top: 10px;
+    }
+    .character-cell {
+        width: 20px;
+        height: 20px;
+        border: 1px solid #ccc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .character-cell.captured {
+        background-color: #add8e6;
+    }
+    textarea {
+        width: 600px;
+        height: 150px;
+        font-size: 14px;
+        margin-top: 10px;
+    }
+</style>
+</head>
+<body>
+
+<canvas id="canvas" width="240" height="240"></canvas>
+<div class="controls">
+    <div class="button-container">
+        <button onclick="convertToBits()">Converter para Bits</button>
+        <button onclick="clearCanvas()">Limpar Canvas</button>
+    </div>
+    <div class="character-grid" id="characterGrid"></div>
+</div>
+
+<textarea id="output" placeholder="Matriz de bits aparecerá aqui..."></textarea>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const pixelSize = 10;
+    const gridSize = 24;
+    let drawing = false;
+    let penSize = 4;
+    let capturedCharacters = new Set();
+
+    function drawGrid() {
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                ctx.strokeRect(i * pixelSize, j * pixelSize, pixelSize, pixelSize);
+            }
+        }
+    }
+
+    function startDrawing(x, y) {
+        drawing = true;
+        drawAtPosition(x, y);
+    }
+
+    function stopDrawing() {
+        drawing = false;
+    }
+
+    function drawAtPosition(x, y) {
+        if (!drawing) return;
+        const rect = canvas.getBoundingClientRect();
+        const gridX = Math.floor((x - rect.left) / pixelSize) * pixelSize;
+        const gridY = Math.floor((y - rect.top) / pixelSize) * pixelSize;
+        ctx.fillRect(gridX, gridY, pixelSize * penSize / 3, pixelSize * penSize / 3);
+    }
+
+    canvas.addEventListener('mousedown', (e) => startDrawing(e.clientX, e.clientY));
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mousemove', (e) => drawAtPosition(e.clientX, e.clientY));
+
+    canvas.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        startDrawing(touch.clientX, touch.clientY);
+    });
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        drawAtPosition(touch.clientX, touch.clientY);
+    });
+    canvas.addEventListener('touchend', stopDrawing);
+
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGrid();
+    }
+
+    function convertToBits(character) {
+        if (!character) return alert("Selecione um caractere.");
+
+        const bitMatrix = [];
+        for (let y = 0; y < gridSize; y++) {
+            for (let x = 0; x < gridSize; x++) {
+                const pixelData = ctx.getImageData(x * pixelSize, y * pixelSize, pixelSize, pixelSize).data;
+                let isFilled = false;
+                for (let i = 0; i < pixelData.length; i += 4) {
+                    const [r, g, b, a] = pixelData.slice(i, i + 4);
+                    if (r === 0 && g === 0 && b === 0 && a === 255) {
+                        isFilled = true;
+                        break;
+                    }
+                }
+                bitMatrix.push(isFilled ? 1 : 0);
+            }
+        }
+        const bitString = bitMatrix.join('') + ' ' + character;
+        document.getElementById('output').value += bitString + '\n';
+        capturedCharacters.add(character);
+        updateCharacterGrid();
+        clearCanvas();
+    }
+
+    function updateCharacterGrid() {
+        const characterGrid = document.getElementById('characterGrid');
+        characterGrid.innerHTML = '';
+        for (let i = 0; i < 26; i++) {
+            const char = String.fromCharCode(65 + i);
+            const cell = document.createElement('div');
+            cell.className = 'character-cell' + (capturedCharacters.has(char) ? ' captured' : '');
+            cell.innerText = char;
+            cell.onclick = () => convertToBits(char);
+            characterGrid.appendChild(cell);
+        }
+    }
+
+    drawGrid();
+    updateCharacterGrid();
+</script>
+
+</body>
+</html>
