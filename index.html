@@ -113,6 +113,17 @@
     canvas.addEventListener('mouseup', () => drawing = false);
     canvas.addEventListener('mousemove', draw);
 
+    canvas.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        startDrawing(touch.clientX, touch.clientY);
+    });
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        drawAtPosition(touch.clientX, touch.clientY);
+    });
+    canvas.addEventListener('touchend', stopDrawing);
+
     window.onbeforeunload = function () {
         return "Tem certeza de que deseja sair? Suas alterações podem não ser salvas.";
     };
