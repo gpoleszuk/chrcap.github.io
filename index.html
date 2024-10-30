@@ -64,6 +64,7 @@
 </div>
 
 <textarea id="output" placeholder="Matriz de bits aparecerá aqui..."></textarea>
+<button type="button" value="save" id="save" onclick="download()">Save</button>
 
 <script>
     const canvas = document.getElementById('canvas');
@@ -71,7 +72,7 @@
     const pixelSize = 10;
     const gridSize = 24;
     let drawing = false;
-    let penSize = 4;
+    let penSize = 5;
     let capturedCharacters = new Set();
 
     function drawGrid() {
@@ -118,7 +119,22 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawGrid();
     }
-
+    
+    // Credits: https://stackoverflow.com/a/48550997
+    function download(){
+        var text = document.getElementById("output").value;
+        text = text.replace(/\n/g, "\r\n"); // To retain the Line breaks.
+        var blob = new Blob([text], { type: "text/plain"});
+        var anchor = document.createElement("a");
+        anchor.download = "my-filename.txt";
+        anchor.href = window.URL.createObjectURL(blob);
+        anchor.target ="_blank";
+        anchor.style.display = "none"; // just to be safe!
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+    }
+    
     function convertToBits(character) {
         if (!character) return alert("Selecione um caractere.");
 
