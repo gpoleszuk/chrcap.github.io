@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display different time systems</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .time-container {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .time {
+            margin: 10px 0;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="time-container">
+        <h1>Using Current Time to Display</h1>
+        <div id="current-time" class="time"></div>
+        <div id="unix-time" class="time"></div>
+        <div id="gps-time" class="time"></div>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+
+            // Current time
+            const currentTimeString = `Current Time: ${now.toUTCString()}`;
+            document.getElementById("current-time").innerText = currentTimeString;
+
+            // UNIX time
+            const unixTime = Math.floor(now.getTime() / 1000);
+            const unixTimeString = `UNIX Time: ${unixTime}`;
+            document.getElementById("unix-time").innerText = unixTimeString;
+
+            // GPS Time
+            const gpsEpoch = new Date(Date.UTC(1980, 0, 6, 0, 0, 0));
+            const gpsDuration = Math.floor((now - gpsEpoch) / 1000); // in seconds
+            const gpsWeek = Math.floor(gpsDuration / 604800); // 604800 seconds in a week
+            const gpsDayOfWeek = Math.floor((gpsDuration % 604800) / 86400); // 86400 seconds in a day
+            const gpsSecondsOfWeek = gpsDuration % 604800; // Remaining seconds in the current GPS week
+
+            const gpsTimeString = `GPS Time: Week ${gpsWeek}, Day ${gpsDayOfWeek}, Seconds of Week ${gpsSecondsOfWeek}`;
+            document.getElementById("gps-time").innerText = gpsTimeString;
+        }
+
+        // Update the time every second
+        setInterval(updateTime, 1000);
+        updateTime(); // initial call to display time immediately
+    </script>
+</body>
+</html>
