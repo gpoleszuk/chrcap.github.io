@@ -1,181 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Canvas 24x24 com Conversão Binária</title>
-<style>
-    body {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        font-family: Arial, sans-serif;
-    }
-    canvas {
-        border: 1px solid #000;
-        background-color: #fff;
-        cursor: crosshair;
-        margin-bottom: 10px;
-    }
-    .controls {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    .button-container {
-        margin-top: 10px;
-    }
-    .character-grid {
-        display: grid;
-        grid-template-columns: repeat(13, 1fr);
-        gap: 5px;
-        margin-top: 10px;
-    }
-    .character-cell {
-        width: 20px;
-        height: 20px;
-        border: 1px solid #ccc;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-weight: bold;
-    }
-    .character-cell.captured {
-        background-color: #add8e6;
-    }
-    textarea {
-        width: 600px;
-        height: 150px;
-        font-size: 14px;
-        margin-top: 10px;
-    }
-</style>
+    <meta charset="UTF-8">
+    <title>Editor Markdown com Análise Gramatical</title>
+    <!-- Incluindo o CSS do Bootstrap -->
+    <link rel="stylesheet" href="libs/bootstrap.css">
+    <!-- <link rel="stylesheet" href="libs/bootstrap.min.css"> -->
+    <!-- Incluindo o CSS do Highlight.js via CDN -->
+    <link rel="stylesheet" href="./default.min.css">
+    <!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">-->
+    <!-- Incluindo o seu CSS personalizado -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<canvas id="canvas" width="240" height="240"></canvas>
-<div class="controls">
-    <div class="button-container">
-        <button onclick="convertToBits()">Converter para Bits</button>
-        <button onclick="clearCanvas()">Limpar Canvas</button>
+<!-- Contêiner principal -->
+<div id="main-container">
+
+    <!-- Contêiner do editor -->
+    <div id="editor-container">
+        <div id="editor"># Bem-vindo ao Editor Markdown</div>
     </div>
-    <div class="character-grid" id="characterGrid"></div>
+
+    <!-- Contêiner do visualizador e barra lateral -->
+    <div id="viewer-container">
+
+        <!-- Visualizador Markdown -->
+        <div id="mdview"></div>
+
+        <!-- Barra lateral dos avisos -->
+        <div id="sidebar">
+            <h3>Avisos</h3>
+            <div id="mdviewSummary"></div>
+        </div>
+
+    </div>
+
 </div>
 
-<textarea id="output" placeholder="Matriz de bits aparecerá aqui..."></textarea>
-<button type="button" value="save" id="save" onclick="download()">Save</button>
-<a href="./checkcapture.html">_</a>
-<script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    const pixelSize = 10;
-    const gridSize = 24;
-    let drawing = false;
-    let penSize = 5;
-    let capturedCharacters = new Set();
+<!-- Painel de Estatísticas -->
+<div id="statistics">
+    <div id="stats-info">
+        <p>Sentenças: <span id="sentences">0</span></p>
+        <p>Palavras: <span id="words">0</span></p>
+        <p>Caracteres: <span id="characters">0</span></p>
+        <p>Avisos: <span id="warnings" class="text-success">0</span></p>
+    </div>
+    <!-- Botões de Upload e Download -->
+    <div id="file-actions">
+        <input type="file" id="file-input" accept=".md,.markdown,.txt">
+        <button id="upload-button" class="btn btn-secondary btn-sm">Upload</button>
+        <button id="download-button" class="btn btn-secondary btn-sm">Download</button>
+    </div>
+</div>
 
-    function drawGrid() {
-        for (let i = 0; i < gridSize; i++) {
-            for (let j = 0; j < gridSize; j++) {
-                ctx.strokeRect(i * pixelSize, j * pixelSize, pixelSize, pixelSize);
-            }
-        }
-    }
-
-    function startDrawing(x, y) {
-        drawing = true;
-        drawAtPosition(x, y);
-    }
-
-    function stopDrawing() {
-        drawing = false;
-    }
-
-    function drawAtPosition(x, y) {
-        if (!drawing) return;
-        const rect = canvas.getBoundingClientRect();
-        const gridX = Math.floor((x - rect.left) / pixelSize) * pixelSize;
-        const gridY = Math.floor((y - rect.top) / pixelSize) * pixelSize;
-        ctx.fillRect(gridX, gridY, pixelSize * penSize / 3, pixelSize * penSize / 3);
-    }
-
-    canvas.addEventListener('mousedown', (e) => startDrawing(e.clientX, e.clientY));
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('mousemove', (e) => drawAtPosition(e.clientX, e.clientY));
-
-    canvas.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        startDrawing(touch.clientX, touch.clientY);
-    });
-    canvas.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        drawAtPosition(touch.clientX, touch.clientY);
-    });
-    canvas.addEventListener('touchend', stopDrawing);
-
-    function clearCanvas() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawGrid();
-    }
-    
-    // Credits: https://stackoverflow.com/a/48550997
-    function download(){
-        var text = document.getElementById("output").value;
-        text = text.replace(/\n/g, "\r\n"); // To retain the Line breaks.
-        var blob = new Blob([text], { type: "text/plain"});
-        var anchor = document.createElement("a");
-        anchor.download = "my-filename.txt";
-        anchor.href = window.URL.createObjectURL(blob);
-        anchor.target ="_blank";
-        anchor.style.display = "none"; // just to be safe!
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
-    }
-    
-    function convertToBits(character) {
-        if (!character) return alert("Selecione um caractere.");
-
-        const bitMatrix = [];
-        for (let y = 0; y < gridSize; y++) {
-            for (let x = 0; x < gridSize; x++) {
-                const pixelData = ctx.getImageData(x * pixelSize, y * pixelSize, pixelSize, pixelSize).data;
-                let isFilled = false;
-                for (let i = 0; i < pixelData.length; i += 4) {
-                    const [r, g, b, a] = pixelData.slice(i, i + 4);
-                    if (r === 0 && g === 0 && b === 0 && a === 255) {
-                        isFilled = true;
-                        break;
-                    }
-                }
-                bitMatrix.push(isFilled ? 1 : 0);
-            }
-        }
-        const bitString = bitMatrix.join('') + ' ' + character;
-        document.getElementById('output').value += bitString + '\n';
-        capturedCharacters.add(character);
-        updateCharacterGrid();
-        clearCanvas();
-    }
-
-    function updateCharacterGrid() {
-        const characterGrid = document.getElementById('characterGrid');
-        characterGrid.innerHTML = '';
-        for (let i = 0; i < 26; i++) {
-            const char = String.fromCharCode(65 + i);
-            const cell = document.createElement('div');
-            cell.className = 'character-cell' + (capturedCharacters.has(char) ? ' captured' : '');
-            cell.innerText = char;
-            cell.onclick = () => convertToBits(char);
-            characterGrid.appendChild(cell);
-        }
-    }
-
-    drawGrid();
-    updateCharacterGrid();
-</script>
+<!-- Incluindo as bibliotecas JavaScript -->
+<!-- jQuery (necessário para Bootstrap popovers) -->
+<script src="libs/jquery.min.js"></script>
+<!-- Bootstrap JS (inclui Popper.js) -->
+<script src="libs/bootstrap.bundle.js"></script>
+<!-- <script src="libs/bootstrap.bundle.min.js"></script> -->
+<!-- Ace Editor -->
+<script src="libs/ace.js"></script>
+<script src="libs/mode-markdown.js"></script>
+<script src="libs/theme-chrome.js"></script>
+<!-- Markdown-it -->
+<script src="libs/markdown-it.min.js"></script>
+<!-- Plugin Footnote do Markdown-it -->
+<script src="libs/markdown-it-footnote.min.js"></script>
+<!-- Highlight.js via CDN -->
+<script src="./highlight.min.js"></script>
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>-->
+<!-- DOMPurify -->
+<script src="libs/purify.js"></script>
+<!-- <script src="libs/purify.min.js"></script> -->
+<!-- Seu script personalizado -->
+<script src="script.js"></script>
 
 </body>
 </html>
