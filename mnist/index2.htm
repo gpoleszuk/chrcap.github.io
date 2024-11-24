@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digit Recognition</title>
+    <style>
+        canvas {
+            image-rendering: pixelated;
+            border: 1px solid black;
+        }
+        #drawingCanvas {
+            width: 280px; /* Zoom by 10x */
+            height: 280px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Digit Recognition</h1>
+    <canvas id="drawingCanvas" width="28" height="28"></canvas>
+    <button id="clearCanvas">Clear</button>
+    <div id="output">Prediction: <span id="prediction"></span></div>
+    <!--<script src="digit_recognition.js"></script>-->
+    <script src="script2.js"></script>
+</body>
+</html>
+

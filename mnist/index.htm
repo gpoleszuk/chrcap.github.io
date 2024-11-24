@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handwritten Digit Recognition</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            background-color: white;
+        }
+        #output {
+            font-family: Arial, sans-serif;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Digit Recognition</h1>
+    <canvas id="drawingCanvas" width="280" height="280"></canvas>
+    <button id="clearCanvas">Clear</button>
+    <div id="output">Prediction: <span id="prediction"></span></div>
+    <script src="digit_recog.js"></script>
+    <!--<script src="digit_recognition.js"></script>-->
+</body>
+</html>
+
