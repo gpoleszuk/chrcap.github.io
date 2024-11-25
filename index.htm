@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handwritten Digit Recognition</title>
+            <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow-y: hidden;
+        }
+        canvas {
+            border: 1px solid black;
+            background-color: white;
+        }
+        #output {
+            font-family: Arial, sans-serif;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <p>Ver: <span id="version"></span></p>
+    <h1>Digit Recognition</h1>
+    <canvas id="drawingCanvas" width="280" height="280"></canvas>
+    <button id="clearCanvas">Clear</button>
+    <div id="output">Prediction: <span id="prediction"></span></div>
+    <div>
+       <label for="correctLabel">Correct Label:</label>
+       <input type="number" id="correctLabel" min="0" max="9" value="0">
+       <button id="storeExample">Store Example</button>
+       <button id="downloadData">Download Data</button>
+    </div>
+    <p>Message: <span id="messages"></span></p>
+    <p>Stored Examples: <span id="exampleCount">0</span></p>
+    <script src="digit_recog.js"></script>
+    <!--<script src="digit_recognition.js"></script>-->
+</body>
+</html>
+
