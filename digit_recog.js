@@ -79,7 +79,7 @@ function getCanvasData(canvas) {
 // Setup drawing
 const canvas = document.getElementById("drawingCanvas");
 const ctx = canvas.getContext("2d", { willReadFrequently: true });
-ctx.lineWidth = 30;
+ctx.lineWidth = 20;
 ctx.lineCap = "round";
 let drawing = false;
 
