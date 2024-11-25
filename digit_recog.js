@@ -2,7 +2,7 @@ const model = {};
 const localDataKey = "digitExamples";
 const storedData = JSON.parse(localStorage.getItem(localDataKey)) || { images: [], labels: [] };
 updateExampleCount();
-document.getElementById("version").textContent = "0.0.2";
+document.getElementById("version").textContent = "0.0.3";
 
 // Load the model JSON file
 fetch("model.json")
