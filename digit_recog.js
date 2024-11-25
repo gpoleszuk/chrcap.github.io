@@ -64,7 +64,7 @@ function getCanvasData(canvas) {
     let counter = 0;
     console.clear();
     for (let i = 0; i < data.length; i++) {
-        char += ((data[i]>100)?(data[i] + " "):((data[i]>10)?(" " + data[i] + " "):("  " + data[i] + " ")));
+        char += ((data[i]>=100)?(data[i] + " "):((data[i]>=10)?(" " + data[i] + " "):("  " + data[i] + " ")));
         counter++;
         char += (counter % 28)?"":"\n";
         //char += data[i] + " ";
