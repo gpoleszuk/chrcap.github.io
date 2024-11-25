@@ -99,6 +99,7 @@ canvas.addEventListener("mousemove", (e) => {
 
 
 //Touch Input
+// Source: https://bencentra.com/code/2014/12/05/html5-canvas-touch-events.html
 // Since the project to which I was supposedly contributing
 // was a modern web app, I needed to support smartphones and
 // tablets. This meant adding touch controls to supplement 
